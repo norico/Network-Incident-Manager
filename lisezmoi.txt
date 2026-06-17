@@ -1,0 +1,110 @@
+=== Network Incident Manager ===
+Contributeurs :     norico
+Étiquettes :        incidents, supervision, page de statut, réseau, multisite
+Nécessite au moins: 6.3
+Testé jusqu'à :     6.8
+Nécessite PHP :     8.1
+Version stable :    2.4.0
+Licence :           GPLv2 ou ultérieure
+URI de licence :    https://www.gnu.org/licenses/gpl-2.0.html
+Studio Code :       WordPress Studio Code propulsé par Claude claude-sonnet-4-5 (Anthropic)
+
+Documentation en anglais : readme.txt
+
+Gestionnaire d'incidents réseau avec table dédiée, applications hiérarchiques, page de statut publique et API REST.
+
+== Description ==
+
+Network Incident Manager vous permet de déclarer, suivre et publier des incidents réseau sans utiliser les articles WordPress.
+Les incidents sont stockés dans une table dédiée `wp_incidents` et affichés sur une page publique `/incidents/`.
+
+= Fonctionnalités principales =
+
+* **Table dédiée** — incidents stockés dans `wp_incidents`, pas dans `wp_posts`
+* **Cycle de vie des incidents** — Programmé → En cours → Résolu, avec transition automatique à la date de début configurée
+* **Gestion des applications** — table hiérarchique `wp_incident_apps` ; associez les incidents à des applications
+* **Page de statut publique** — `/incidents/` affiche les incidents actifs, programmés et récemment résolus
+* **Surcharge de templates** — les thèmes peuvent remplacer n'importe quelle partie du template (voir section Templates)
+* **Mise à jour du statut en ligne** — changez le statut d'un incident directement depuis la liste admin (AJAX)
+* **API REST** — lecture et écriture des incidents via `/wp-json/network-incidents/v1/`
+* **Compatible Multisite** — l'endpoint REST peut être interrogé depuis n'importe quel sous-site
+* **i18n** — entièrement internationalisé ; traduction française (fr_FR) incluse
+
+= Statuts =
+
+* **Programmé** — incident déclaré pour une date future ; passe automatiquement en « En cours » à la date `start_at`
+* **En cours** — incident en cours
+* **Résolu** — incident clôturé
+
+= Transition automatique =
+
+Lorsque la date `start_at` d'un incident est atteinte, son statut passe automatiquement de Programmé à En cours.
+La vérification s'effectue :
+1. À chaque visite de la page frontend `/incidents/`
+2. Toutes les heures via WP-Cron (`nim_cron_transition`)
+
+= API REST =
+
+* `GET        /wp-json/network-incidents/v1/list` — public ; supporte `?status=`, `?severity=`, `?app_id=`, `?per_page=`, `?page=` ; retourne les en-têtes `X-WP-Total` / `X-WP-TotalPages`
+* `POST       /wp-json/network-incidents/v1/incidents` — création (nécessite `edit_posts`)
+* `PUT|PATCH  /wp-json/network-incidents/v1/incidents/{id}` — mise à jour partielle ou complète (nécessite `edit_posts`) ; retourne 404 si l'incident n'existe pas
+
+= Templates =
+
+Les templates par défaut se trouvent dans `templates/`. Pour les remplacer dans votre thème, créez le fichier au chemin correspondant :
+
+* `page-incidents.php` → `{thème}/page-incidents.php`
+* `templates/parts/incident-active.php` → `{thème}/nim/incident-active.php`
+* `templates/parts/incident-scheduled.php` → `{thème}/nim/incident-scheduled.php`
+* `templates/parts/incident-resolved.php` → `{thème}/nim/incident-resolved.php`
+
+Le CSS par défaut (`assets/css/frontend.css`) n'est chargé que si aucun template de thème n'est trouvé.
+
+== Installation ==
+
+1. Téléversez le dossier `network-incident-manager` dans `wp-content/plugins/`
+2. Activez l'extension via **Extensions → Extensions installées**
+3. Allez dans **Incidents → Applications** pour créer votre liste d'applications
+4. Allez dans **Incidents → Déclarer un incident** pour enregistrer votre premier incident
+5. Visitez `votresite.com/incidents/` pour voir la page de statut publique
+
+Si l'URL `/incidents/` retourne une erreur 404, allez dans **Réglages → Permaliens** et cliquez sur **Enregistrer les modifications** pour régénérer les règles de réécriture.
+
+== Foire aux questions ==
+
+= La page /incidents/ retourne une erreur 404 =
+Allez dans Réglages → Permaliens et cliquez sur Enregistrer les modifications pour régénérer les règles de réécriture.
+
+= Comment personnaliser le style de la page des incidents ? =
+Créez `page-incidents.php` à la racine de votre thème actif. Le CSS par défaut du plugin ne sera pas chargé et votre thème contrôle entièrement la mise en page.
+
+= Puis-je ne remplacer qu'une seule partie du template ? =
+Oui. Créez `nim/incident-active.php` (ou `incident-scheduled.php`, `incident-resolved.php`) dans votre thème. Les parties non remplacées utilisent les fichiers par défaut du plugin.
+
+= Est-il compatible avec Multisite ? =
+Oui. L'endpoint REST `GET /network-incidents/v1/list` peut être interrogé depuis n'importe quel sous-site ou application externe.
+
+= Fonctionne-t-il avec SQLite (WordPress Studio) ? =
+Oui. `ON UPDATE CURRENT_TIMESTAMP` est évité ; les horodatages sont gérés manuellement. Les index `FULLTEXT` ne sont pas utilisés.
+
+== Captures d'écran ==
+
+1. Liste des incidents en admin avec menu déroulant de statut en ligne
+2. Formulaire d'ajout / modification d'incident avec sélecteur de date de début
+3. Page de gestion des applications
+4. Page publique /incidents/ — sections actifs, programmés et résolus
+
+== Journal des modifications ==
+
+Consultez changelog.txt pour l'historique complet des versions.
+
+== Avis de mise à jour ==
+
+= 2.4.0 =
+Refactorisation interne majeure en POO. Aucun changement de schéma de base de données — la mise à jour est sûre et automatique. Nécessite PHP 8.1+. Si votre thème appelle `nim_get_template_part()` directement, la fonction reste disponible via un shim de compatibilité ascendante.
+
+= 2.2.0 =
+Nouvelle colonne `start_at` ajoutée à `wp_incidents`. La mise à jour s'effectue automatiquement au chargement du plugin. « Open » renommé en « Scheduled » ; statut « Maintenance » supprimé — mettez à jour les données existantes manuellement si nécessaire.
+
+= 2.0.0 =
+Changement majeur : les incidents ont été déplacés de wp_posts vers wp_incidents. Les articles CPT existants ne sont pas migrés automatiquement.

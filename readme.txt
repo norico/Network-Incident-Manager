@@ -9,6 +9,8 @@ License:            GPLv2 or later
 License URI:        https://www.gnu.org/licenses/gpl-2.0.html
 Studio Code:        WordPress Studio Code powered by Claude claude-sonnet-4-5 (Anthropic)
 
+Documentation en français : lisezmoi.txt
+
 Network incident manager with a dedicated database table, hierarchical applications, a public status page, and a REST API.
 
 == Description ==
