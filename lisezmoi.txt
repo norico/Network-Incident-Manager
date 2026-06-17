@@ -4,7 +4,7 @@ Contributeurs :     norico
 Nécessite au moins: 6.3
 Testé jusqu'à :     6.8
 Nécessite PHP :     8.1
-Version stable :    2.4.0
+Version stable :    2.5.1
 Licence :           GPLv2 ou ultérieure
 URI de licence :    https://www.gnu.org/licenses/gpl-2.0.html
 Studio Code :       WordPress Studio Code propulsé par Claude claude-sonnet-4-5 (Anthropic)
@@ -45,9 +45,10 @@ La vérification s'effectue :
 
 = API REST =
 
-* `GET        /wp-json/network-incidents/v1/list` — public ; supporte `?status=`, `?severity=`, `?app_id=`, `?per_page=`, `?page=` ; retourne les en-têtes `X-WP-Total` / `X-WP-TotalPages`
+* `GET        /wp-json/network-incidents/v1/list` — public ; supporte `?status=`, `?severity=`, `?app_id=`, `?per_page=`, `?page=`, `?orderby=`, `?order=` ; retourne les en-têtes `X-WP-Total` / `X-WP-TotalPages`
 * `POST       /wp-json/network-incidents/v1/incidents` — création (nécessite `edit_posts`)
 * `PUT|PATCH  /wp-json/network-incidents/v1/incidents/{id}` — mise à jour partielle ou complète (nécessite `edit_posts`) ; retourne 404 si l'incident n'existe pas
+* `DELETE     /wp-json/network-incidents/v1/incidents/{id}` — suppression (nécessite `delete_posts`) ; retourne 204 en cas de succès
 
 = Templates =
 
@@ -59,6 +60,10 @@ Les templates par défaut se trouvent dans `templates/`. Pour les remplacer dans
 * `templates/parts/incident-resolved.php` → `{thème}/nim/incident-resolved.php`
 
 Le CSS par défaut (`assets/css/frontend.css`) n'est chargé que si aucun template de thème n'est trouvé.
+
+= Code court =
+
+Utilisez `[nim_incidents]` dans n'importe quel article ou page pour intégrer la vue de statut complète. Attribut optionnel : `resolved_limit` (défaut : 5).
 
 == Installation ==
 
@@ -99,6 +104,12 @@ Oui. `ON UPDATE CURRENT_TIMESTAMP` est évité ; les horodatages sont gérés ma
 Consultez changelog.txt pour l'historique complet des versions.
 
 == Avis de mise à jour ==
+
+= 2.5.1 =
+Version corrective : corrige la structure CSS du template des incidents programmés (la date s'affichait collée après le titre), restaure l'affichage de la description manquante, et supprime les avertissements PHP `Undefined variable $td` dans les templates.
+
+= 2.5.0 =
+Nouvelle colonne `resolved_at` ajoutée à `wp_incidents` — la migration s'effectue automatiquement au chargement du plugin. Les incidents programmés s'affichent désormais avec le style CSS correct. Nouveautés : route REST DELETE, code court `[nim_incidents]`, paramètres `?orderby=` / `?order=` sur l'endpoint list.
 
 = 2.4.0 =
 Refactorisation interne majeure en POO. Aucun changement de schéma de base de données — la mise à jour est sûre et automatique. Nécessite PHP 8.1+. Si votre thème appelle `nim_get_template_part()` directement, la fonction reste disponible via un shim de compatibilité ascendante.

@@ -4,7 +4,7 @@ Tags:               incidents, monitoring, status page, network, multisite
 Requires at least:  6.3
 Tested up to:       6.8
 Requires PHP:       8.1
-Stable tag:         2.4.0
+Stable tag:         2.5.1
 License:            GPLv2 or later
 License URI:        https://www.gnu.org/licenses/gpl-2.0.html
 Studio Code:        WordPress Studio Code powered by Claude claude-sonnet-4-5 (Anthropic)
@@ -45,9 +45,10 @@ The check runs:
 
 = REST API =
 
-* `GET        /wp-json/network-incidents/v1/list` — public; supports `?status=`, `?severity=`, `?app_id=`, `?per_page=`, `?page=`; returns `X-WP-Total` / `X-WP-TotalPages` headers
+* `GET        /wp-json/network-incidents/v1/list` — public; supports `?status=`, `?severity=`, `?app_id=`, `?per_page=`, `?page=`, `?orderby=`, `?order=`; returns `X-WP-Total` / `X-WP-TotalPages` headers
 * `POST       /wp-json/network-incidents/v1/incidents` — create (requires `edit_posts`)
 * `PUT|PATCH  /wp-json/network-incidents/v1/incidents/{id}` — partial or full update (requires `edit_posts`); returns 404 if the incident does not exist
+* `DELETE     /wp-json/network-incidents/v1/incidents/{id}` — delete (requires `delete_posts`); returns 204 on success
 
 = Templates =
 
@@ -59,6 +60,10 @@ Default templates live in `templates/`. To override in your theme, create the fi
 * `templates/parts/incident-resolved.php` → `{theme}/nim/incident-resolved.php`
 
 Default CSS (`assets/css/frontend.css`) is only loaded when no theme template override is found.
+
+= Shortcode =
+
+Use `[nim_incidents]` in any post or page to embed the full status view inline. Optional attribute: `resolved_limit` (default 5).
 
 == Installation ==
 
@@ -99,6 +104,12 @@ Yes. `ON UPDATE CURRENT_TIMESTAMP` is avoided; timestamps are managed manually. 
 See changelog.txt for the full version history.
 
 == Upgrade Notice ==
+
+= 2.5.1 =
+Patch release: fixes CSS structure of the scheduled incident template (date was displayed inline after the title), restores missing description display, and removes undefined `$td` variable warnings in template parts.
+
+= 2.5.0 =
+New `resolved_at` column added to `wp_incidents` — migration runs automatically on plugin load. Scheduled incidents now render with the correct CSS style. New: REST DELETE route, `[nim_incidents]` shortcode, `?orderby=` / `?order=` params on the list endpoint.
 
 = 2.4.0 =
 Major internal refactoring to OOP. No database schema changes — upgrade is safe and automatic. Requires PHP 8.1+. If you have a theme that calls `nim_get_template_part()` directly, the function is still available via a backward-compat shim.

@@ -1,3 +1,30 @@
+= 2.5.1 =
+    * Fixed: `incident-scheduled.php` — structure HTML corrigée : le template utilisait les classes CSS de `.nim-resolved-item` (`__title`, `__date` comme `<span>` inline) au lieu des classes dédiées `.nim-scheduled-item` (`__header`, `__title`, `__date` en blocs) — la date s'affichait colée après le titre
+* Fixed: `incident-scheduled.php` — la description de l'incident ne s'affichait plus ; bloc `nim-incident__description` rajouté entre le titre et la date (conditionnel, réutilise le style existant de `incident-active.php`)
+* Fixed: variables `$td` résiduelles dans les trois templates parts (`incident-active.php`, `incident-scheduled.php`, `incident-resolved.php`) généraient un `Warning: Undefined variable $td` ; remplacées par la constante globale `NIM_TD`
+* Version bump: `NIM_VERSION` → `2.5.1`
+
+= 2.5.0 =
+* Fixed: `incident-scheduled.php` was using CSS class `.nim-resolved-item` instead of `.nim-scheduled-item` — scheduled incidents now render with their correct dashed-border style
+* Fixed: `NIM_Ajax::update_status()` — added existence check before UPDATE; success was returned even when the incident ID did not exist
+* Fixed: `NIM_Ajax::update_status()` — now fires `do_action('nim_status_changed', $id, $old, $new)` hook on status change
+* Fixed: `NIM_Admin::handle_incident_save()` — now also fires `nim_status_changed` hook on status change via the admin form
+* Fixed: `GET /list` sort was hardcoded to `created_at DESC` regardless of content type; now defaults to `start_at DESC` and supports `?orderby=` (start_at|created_at|updated_at|severity|status) + `?order=ASC|DESC` params; severity sort uses a weighted CASE expression
+* Fixed: `$wpdb->prepare()` conditional removed in `list_incidents()` — WordPress accepts an empty params array since 5.3 (Q5)
+* Added: `resolved_at datetime NULL` column on `wp_incidents` — set automatically when an incident transitions to Resolved, cleared when re-opened; migration runs on next page load
+* Added: `NIM_DB::update_status()` helper — centralises status update + `resolved_at` logic used by AJAX and REST
+* Added: `NIM_DB::get_resolved_incidents()` now selects `description` and sorts by `COALESCE(resolved_at, updated_at)` for reliable resolved ordering
+* Added: `incident-resolved.php` now displays `resolved_at` (falls back to `updated_at` via COALESCE for pre-2.5.0 rows)
+* Added: REST route `DELETE /wp-json/network-incidents/v1/incidents/{id}` — requires `delete_posts`; returns 204 on success, 404 if not found
+* Added: Shortcode `[nim_incidents]` — embeds the full status page inside any post or page; supports `resolved_limit` attribute (default 5)
+* Added: `NIM_Helpers::severity_label()` and `NIM_Helpers::status_label()` — translated label maps with literal strings extractable by `wp i18n make-pot`; replaces dynamic `__($variable, $td)` calls in templates and admin list
+* Added: `NIM_Helpers::MAX_APP_DEPTH = 10` guard in `apps_options_html()` — prevents infinite recursion on corrupted parent data
+* Added: `NIM_DB::get_all_incidents_admin()` and `NIM_DB::get_all_apps_admin()` — SQL moved out of `NIM_Admin` pages into `NIM_DB` (Q1)
+* Added: `NIM_DB::table()` and `NIM_DB::apps_table()` helpers — eliminate repeated `$wpdb->prefix . NIM_TABLE` string throughout codebase (Q6)
+* Added: `NIM_TD` global constant in bootstrap — single source of truth for the text domain; `NIM_Admin::TD` becomes an alias pointing to `NIM_TD` (Q2)
+* Changed: `NIM_Plugin::load_classes()` is now `public static` — `activate()` calls it directly instead of duplicating its own `require_once` list (F5)
+* Version bump: `NIM_VERSION` → `2.5.0`
+
 = 2.4.0 =
 * Architecture: full refactoring to OOP — logic split across 8 classes in `includes/`
 * Added: `NIM_Plugin` — singleton orchestrator; loads classes and wires all hooks
