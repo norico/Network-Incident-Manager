@@ -21,7 +21,7 @@ class NIM_Ajax {
 
         if ( ! current_user_can( 'edit_posts' ) ) {
             wp_send_json_error( [
-                'message' => __( 'Insufficient permissions.', 'network-incident-manager' ),
+                'message' => __( 'Insufficient permissions.', NIM_TD ),
             ] );
         }
 
@@ -30,21 +30,32 @@ class NIM_Ajax {
 
         if ( ! $id || ! in_array( $status, NIM_Helpers::STATUSES, true ) ) {
             wp_send_json_error( [
-                'message' => __( 'Invalid data.', 'network-incident-manager' ),
+                'message' => __( 'Invalid data.', NIM_TD ),
             ] );
         }
 
         global $wpdb;
-        $result = $wpdb->update(
-            $wpdb->prefix . NIM_TABLE,
-            [ 'status' => $status, 'updated_at' => current_time( 'mysql', true ) ],
-            [ 'id' => $id ]
-        );
+        $table = $wpdb->prefix . NIM_TABLE;
+
+        if ( ! $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $table WHERE id = %d", $id ) ) ) {
+            wp_send_json_error( [
+                'message' => __( 'Incident not found.', NIM_TD ),
+            ] );
+        }
+
+        $old_status = $wpdb->get_var( $wpdb->prepare( "SELECT status FROM $table WHERE id = %d", $id ) );
+
+        $result = NIM_DB::update_status( $id, $status, $old_status );
 
         if ( false === $result ) {
             wp_send_json_error( [
-                'message' => __( 'Update failed.', 'network-incident-manager' ),
+                'message' => __( 'Update failed.', NIM_TD ),
             ] );
+        }
+
+        if ( $old_status !== $status ) {
+            /** @see NIM_Cron::auto_transition() for hook documentation. */
+            do_action( 'nim_status_changed', $id, $old_status, $status );
         }
 
         wp_send_json_success();

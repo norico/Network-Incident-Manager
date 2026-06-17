@@ -37,6 +37,18 @@ class NIM_Cron {
         $table = $wpdb->prefix . NIM_TABLE;
         $now   = current_time( 'mysql', true );
 
+        // Collect IDs about to transition so we can fire per-incident hooks.
+        $ids = $wpdb->get_col(
+            $wpdb->prepare(
+                "SELECT id FROM $table WHERE status = 'Scheduled' AND start_at <= %s",
+                $now
+            )
+        );
+
+        if ( empty( $ids ) ) {
+            return;
+        }
+
         $wpdb->query(
             $wpdb->prepare(
                 "UPDATE $table
@@ -46,6 +58,17 @@ class NIM_Cron {
                 $now
             )
         );
+
+        foreach ( $ids as $id ) {
+            /**
+             * Fires after an incident automatically transitions from Scheduled to In Progress.
+             *
+             * @param int    $id         Incident ID.
+             * @param string $old_status Previous status ('Scheduled').
+             * @param string $new_status New status ('In Progress').
+             */
+            do_action( 'nim_status_changed', (int) $id, 'Scheduled', 'In Progress' );
+        }
     }
 
     /**

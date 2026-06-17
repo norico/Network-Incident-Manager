@@ -28,7 +28,7 @@ class NIM_REST_API {
             'permission_callback' => '__return_true',
             'args'                => [
                 'status' => [
-                    'description'       => __( 'Filter by incident status.', 'network-incident-manager' ),
+                    'description'       => __( 'Filter by incident status.', NIM_TD ),
                     'type'              => 'string',
                     'enum'              => NIM_Helpers::STATUSES,
                     'required'          => false,
@@ -36,7 +36,7 @@ class NIM_REST_API {
                     'sanitize_callback' => 'sanitize_text_field',
                 ],
                 'severity' => [
-                    'description'       => __( 'Filter by incident severity.', 'network-incident-manager' ),
+                    'description'       => __( 'Filter by incident severity.', NIM_TD ),
                     'type'              => 'string',
                     'enum'              => NIM_Helpers::SEVERITIES,
                     'required'          => false,
@@ -44,7 +44,7 @@ class NIM_REST_API {
                     'sanitize_callback' => 'sanitize_text_field',
                 ],
                 'app_id' => [
-                    'description'       => __( 'Filter by application ID.', 'network-incident-manager' ),
+                    'description'       => __( 'Filter by application ID.', NIM_TD ),
                     'type'              => 'integer',
                     'minimum'           => 1,
                     'required'          => false,
@@ -52,7 +52,7 @@ class NIM_REST_API {
                     'sanitize_callback' => 'absint',
                 ],
                 'per_page' => [
-                    'description'       => __( 'Results per page (1-100).', 'network-incident-manager' ),
+                    'description'       => __( 'Results per page (1-100).', NIM_TD ),
                     'type'              => 'integer',
                     'minimum'           => 1,
                     'maximum'           => 100,
@@ -61,12 +61,28 @@ class NIM_REST_API {
                     'sanitize_callback' => 'absint',
                 ],
                 'page' => [
-                    'description'       => __( 'Page number (1-based).', 'network-incident-manager' ),
+                    'description'       => __( 'Page number (1-based).', NIM_TD ),
                     'type'              => 'integer',
                     'minimum'           => 1,
                     'default'           => 1,
                     'validate_callback' => 'rest_validate_request_arg',
                     'sanitize_callback' => 'absint',
+                ],
+                'orderby' => [
+                    'description'       => __( 'Sort field.', NIM_TD ),
+                    'type'              => 'string',
+                    'enum'              => [ 'start_at', 'created_at', 'updated_at', 'severity', 'status' ],
+                    'default'           => 'start_at',
+                    'validate_callback' => 'rest_validate_request_arg',
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
+                'order' => [
+                    'description'       => __( 'Sort direction.', NIM_TD ),
+                    'type'              => 'string',
+                    'enum'              => [ 'ASC', 'DESC' ],
+                    'default'           => 'DESC',
+                    'validate_callback' => 'rest_validate_request_arg',
+                    'sanitize_callback' => 'sanitize_text_field',
                 ],
             ],
         ] );
@@ -81,6 +97,19 @@ class NIM_REST_API {
             'methods'             => [ 'PUT', 'PATCH' ],
             'callback'            => [ __CLASS__, 'update_incident' ],
             'permission_callback' => fn() => current_user_can( 'edit_posts' ),
+            'args'                => [
+                'id' => [
+                    'type'              => 'integer',
+                    'minimum'           => 1,
+                    'validate_callback' => 'rest_validate_request_arg',
+                ],
+            ],
+        ] );
+
+        register_rest_route( self::NAMESPACE, '/incidents/(?P<id>\d+)', [
+            'methods'             => 'DELETE',
+            'callback'            => [ __CLASS__, 'delete_incident' ],
+            'permission_callback' => fn() => current_user_can( 'delete_posts' ),
             'args'                => [
                 'id' => [
                     'type'              => 'integer',
@@ -124,10 +153,20 @@ class NIM_REST_API {
         $page      = (int) $request->get_param( 'page' );
         $offset    = ( $page - 1 ) * $per_page;
 
+        // Whitelist orderby/order — values already validated by enum arg.
+        $allowed_orderby = [ 'start_at', 'created_at', 'updated_at', 'severity', 'status' ];
+        $orderby = in_array( $request->get_param( 'orderby' ), $allowed_orderby, true )
+            ? $request->get_param( 'orderby' ) : 'start_at';
+        $order   = 'ASC' === strtoupper( (string) $request->get_param( 'order' ) ) ? 'ASC' : 'DESC';
+
+        // Severity needs a CASE sort for meaningful ordering.
+        $order_sql = ( 'severity' === $orderby )
+            ? "CASE i.severity WHEN 'Critical' THEN 1 WHEN 'Major' THEN 2 ELSE 3 END $order"
+            : "i.$orderby $order";
+
+        // Q5: prepare() accepts an empty params array — no conditional needed.
         $count_sql = "SELECT COUNT(*) FROM $table i $where_sql";
-        $total     = (int) ( $params
-            ? $wpdb->get_var( $wpdb->prepare( $count_sql, $params ) ) // phpcs:ignore
-            : $wpdb->get_var( $count_sql ) );
+        $total     = (int) $wpdb->get_var( $wpdb->prepare( $count_sql, $params ) ); // phpcs:ignore
 
         $select_sql = "SELECT i.id, i.reference, i.description, i.severity,
                               i.status, i.app_id, i.start_at, i.created_at, i.updated_at,
@@ -135,7 +174,7 @@ class NIM_REST_API {
                        FROM $table i
                        LEFT JOIN $table_apps a ON i.app_id = a.id
                        $where_sql
-                       ORDER BY i.created_at DESC
+                       ORDER BY $order_sql
                        LIMIT %d OFFSET %d";
 
         $query_params = array_merge( $params, [ $per_page, $offset ] );
@@ -175,7 +214,7 @@ class NIM_REST_API {
         $incident = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE id = %d", $id ) );
         if ( ! $incident ) {
             return new WP_REST_Response(
-                [ 'code' => 'nim_not_found', 'message' => __( 'Incident not found.', 'network-incident-manager' ) ],
+                [ 'code' => 'nim_not_found', 'message' => __( 'Incident not found.', NIM_TD ) ],
                 404
             );
         }
@@ -190,6 +229,26 @@ class NIM_REST_API {
             $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $table WHERE id = %d", $id ) ),
             200
         );
+    }
+
+    /**
+     * DELETE /incidents/{id} — delete an incident.
+     */
+    public static function delete_incident( WP_REST_Request $request ) {
+        global $wpdb;
+        $table = NIM_DB::table();
+        $id    = absint( $request->get_param( 'id' ) );
+
+        if ( ! $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $table WHERE id = %d", $id ) ) ) {
+            return new WP_REST_Response(
+                [ 'code' => 'nim_not_found', 'message' => __( 'Incident not found.', NIM_TD ) ],
+                404
+            );
+        }
+
+        $wpdb->delete( $table, [ 'id' => $id ] );
+
+        return new WP_REST_Response( null, 204 );
     }
 
     // -----------------------------------------------------------------------

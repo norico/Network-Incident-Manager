@@ -2,7 +2,7 @@
 # Copyright (C) 2024
 msgid ""
 msgstr ""
-"Project-Id-Version: Network Incident Manager 2.4.0\n"
+"Project-Id-Version: Network Incident Manager 2.5.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-01-01 00:00+0000\n"
 "PO-Revision-Date: 2026-06-17 18:10+0200\n"
@@ -222,3 +222,10 @@ msgstr "Erreur"
 
 msgid "Saved"
 msgstr "Enregistré"
+
+# --- REST API args (2.5.0) ---
+msgid "Sort field."
+msgstr "Champ de tri."
+
+msgid "Sort direction."
+msgstr "Sens du tri."

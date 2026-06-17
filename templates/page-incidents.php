@@ -8,40 +8,9 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-global $wpdb;
-
-// 1. Active incidents (In Progress)
-$incidents = $wpdb->get_results(
-    "SELECT i.id, i.reference, i.description, i.severity, i.status, i.start_at, i.created_at,
-            a.name AS app_name
-     FROM {$wpdb->prefix}incidents i
-     LEFT JOIN {$wpdb->prefix}incident_apps a ON i.app_id = a.id
-     WHERE i.status = 'In Progress'
-     ORDER BY
-         CASE i.severity WHEN 'Critical' THEN 1 WHEN 'Major' THEN 2 ELSE 3 END,
-         i.start_at ASC"
-);
-
-// 2. Scheduled incidents (future start_at)
-$scheduled = $wpdb->get_results(
-    "SELECT i.id, i.reference, i.description, i.severity, i.status, i.start_at,
-            a.name AS app_name
-     FROM {$wpdb->prefix}incidents i
-     LEFT JOIN {$wpdb->prefix}incident_apps a ON i.app_id = a.id
-     WHERE i.status = 'Scheduled'
-     ORDER BY i.start_at ASC"
-);
-
-// 3. Recently resolved (last 5)
-$resolved = $wpdb->get_results(
-    "SELECT i.id, i.reference, i.severity, i.updated_at,
-            a.name AS app_name
-     FROM {$wpdb->prefix}incidents i
-     LEFT JOIN {$wpdb->prefix}incident_apps a ON i.app_id = a.id
-     WHERE i.status = 'Resolved'
-     ORDER BY i.updated_at DESC
-     LIMIT 5"
-);
+$incidents = NIM_DB::get_active_incidents();
+$scheduled = NIM_DB::get_scheduled_incidents();
+$resolved  = NIM_DB::get_resolved_incidents( 5 );
 
 get_header();
 ?>
@@ -53,12 +22,12 @@ get_header();
      * -------------------------------------------------------------- */ ?>
     <header class="nim-incidents-header">
         <h1 class="nim-incidents-title">
-            <?php esc_html_e( 'Incidents', 'network-incident-manager' ); ?>
+            <?php esc_html_e( 'Incidents', NIM_TD ); ?>
         </h1>
         <?php if ( ! empty( $incidents ) ) : ?>
         <p class="nim-incidents-count">
             <?php printf(
-                esc_html( _n( '%d active incident', '%d active incidents', count( $incidents ), 'network-incident-manager' ) ),
+                esc_html( _n( '%d active incident', '%d active incidents', count( $incidents ), NIM_TD ) ),
                 count( $incidents )
             ); ?>
         </p>
@@ -68,7 +37,7 @@ get_header();
     <?php if ( empty( $incidents ) ) : ?>
     <div class="nim-no-incidents">
         <span class="nim-no-incidents-icon" aria-hidden="true">&#10003;</span>
-        <p><?php esc_html_e( 'No active incidents at this time.', 'network-incident-manager' ); ?></p>
+        <p><?php esc_html_e( 'No active incidents at this time.', NIM_TD ); ?></p>
     </div>
     <?php else : ?>
     <ul class="nim-incidents-list">
@@ -84,7 +53,7 @@ get_header();
     <?php if ( ! empty( $scheduled ) ) : ?>
     <section class="nim-scheduled-section">
         <h2 class="nim-scheduled-title">
-            <?php esc_html_e( 'Scheduled Incidents', 'network-incident-manager' ); ?>
+            <?php esc_html_e( 'Scheduled Incidents', NIM_TD ); ?>
         </h2>
         <ul class="nim-scheduled-list">
             <?php foreach ( $scheduled as $incident ) :
@@ -100,7 +69,7 @@ get_header();
     <?php if ( ! empty( $resolved ) ) : ?>
     <section class="nim-resolved-section">
         <h2 class="nim-resolved-title">
-            <?php esc_html_e( 'Recently Resolved', 'network-incident-manager' ); ?>
+            <?php esc_html_e( 'Recently Resolved', NIM_TD ); ?>
         </h2>
         <ul class="nim-resolved-list">
             <?php foreach ( $resolved as $incident ) :

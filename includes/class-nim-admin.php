@@ -9,7 +9,8 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 class NIM_Admin {
 
-    const TD = 'network-incident-manager';
+    /** @deprecated Use NIM_TD constant instead. */
+    const TD = NIM_TD;
 
     public static function register_hooks() {
         add_action( 'admin_menu',            [ __CLASS__, 'register_menu' ] );
@@ -84,10 +85,20 @@ class NIM_Admin {
         ];
         $id = absint( $_POST['nim_incident_id'] ?? 0 );
         if ( $id > 0 ) {
-            if ( ! $wpdb->get_var( $wpdb->prepare( "SELECT id FROM $table WHERE id = %d", $id ) ) ) {
+            $existing = $wpdb->get_row( $wpdb->prepare( "SELECT id, status FROM $table WHERE id = %d", $id ) );
+            if ( ! $existing ) {
                 wp_die( esc_html__( 'Incident not found.', self::TD ), esc_html__( 'Error', self::TD ), [ 'back_link' => true, 'response' => 404 ] );
             }
+            // Set resolved_at on transition to/from Resolved.
+            if ( 'Resolved' === $data['status'] && 'Resolved' !== $existing->status ) {
+                $data['resolved_at'] = current_time( 'mysql', true );
+            } elseif ( 'Resolved' !== $data['status'] ) {
+                $data['resolved_at'] = null;
+            }
             $wpdb->update( $table, $data, [ 'id' => $id ] );
+            if ( $existing->status !== $data['status'] ) {
+                do_action( 'nim_status_changed', $id, $existing->status, $data['status'] );
+            }
             $saved_id = $id;
         } else {
             $data['created_at'] = current_time( 'mysql', true );
@@ -158,12 +169,9 @@ class NIM_Admin {
     // -----------------------------------------------------------------------
 
     public static function page_list() {
-        global $wpdb;
-        $td   = self::TD;
-        $table      = $wpdb->prefix . NIM_TABLE;
-        $table_apps = $wpdb->prefix . NIM_APPS_TABLE;
+        $td          = self::TD;
         $status_opts = [ 'Scheduled' => __( 'Scheduled', $td ), 'In Progress' => __( 'In Progress', $td ), 'Resolved' => __( 'Resolved', $td ) ];
-        $incidents = $wpdb->get_results( "SELECT i.*, a.name AS app_name FROM $table i LEFT JOIN $table_apps a ON i.app_id = a.id ORDER BY i.start_at DESC" );
+        $incidents   = NIM_DB::get_all_incidents_admin();
         ?>
         <div class="wrap">
             <h1 class="wp-heading-inline"><?php esc_html_e( 'Incidents', $td ); ?></h1>
@@ -195,7 +203,7 @@ class NIM_Admin {
                         </div>
                     </td>
                     <td><?php echo esc_html( $inc->app_name ?: '—' ); ?></td>
-                    <td><?php echo esc_html( __( $inc->severity, $td ) ); ?></td>
+                    <td><?php echo esc_html( NIM_Helpers::severity_label( $inc->severity ) ); ?></td>
                     <td>
                         <select class="nim-status-select" data-id="<?php echo esc_attr( $inc->id ); ?>">
                             <?php foreach ( $status_opts as $val => $label ) : ?>
@@ -274,10 +282,8 @@ class NIM_Admin {
     }
 
     public static function page_apps_list() {
-        global $wpdb;
-        $td    = self::TD;
-        $table = $wpdb->prefix . NIM_APPS_TABLE;
-        $apps  = $wpdb->get_results( "SELECT a.*, p.name AS parent_name FROM $table a LEFT JOIN $table p ON a.parent_id = p.id ORDER BY p.name ASC, a.name ASC" );
+        $td   = self::TD;
+        $apps = NIM_DB::get_all_apps_admin();
         ?>
         <div class="wrap">
             <h1 class="wp-heading-inline"><?php esc_html_e( 'Applications', $td ); ?></h1>

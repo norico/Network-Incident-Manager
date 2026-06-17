@@ -29,6 +29,7 @@ class NIM_DB {
             app_id      bigint(20)   NOT NULL DEFAULT 0,
             author_id   bigint(20)   NOT NULL DEFAULT 0,
             start_at    datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            resolved_at datetime     NULL,
             created_at  datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP,
             updated_at  datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY  (id),
@@ -64,6 +65,159 @@ class NIM_DB {
             NIM_Frontend::register_rewrite_rules();
             flush_rewrite_rules();
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // Query helpers — used by templates and other classes
+    // -------------------------------------------------------------------------
+
+    /**
+     * Return active (In Progress) incidents, ordered by severity then start_at.
+     *
+     * @return array|object|null
+     */
+    public static function get_active_incidents() {
+        global $wpdb;
+        $t  = $wpdb->prefix . NIM_TABLE;
+        $ta = $wpdb->prefix . NIM_APPS_TABLE;
+
+        return $wpdb->get_results(
+            "SELECT i.id, i.reference, i.description, i.severity, i.status,
+                    i.start_at, i.created_at,
+                    a.name AS app_name
+             FROM $t i
+             LEFT JOIN $ta a ON i.app_id = a.id
+             WHERE i.status = 'In Progress'
+             ORDER BY
+                 CASE i.severity WHEN 'Critical' THEN 1 WHEN 'Major' THEN 2 ELSE 3 END,
+                 i.start_at ASC"
+        );
+    }
+
+    /**
+     * Return scheduled incidents, ordered by start_at ascending.
+     *
+     * @return array|object|null
+     */
+    public static function get_scheduled_incidents() {
+        global $wpdb;
+        $t  = $wpdb->prefix . NIM_TABLE;
+        $ta = $wpdb->prefix . NIM_APPS_TABLE;
+
+        return $wpdb->get_results(
+            "SELECT i.id, i.reference, i.description, i.severity, i.status,
+                    i.start_at,
+                    a.name AS app_name
+             FROM $t i
+             LEFT JOIN $ta a ON i.app_id = a.id
+             WHERE i.status = 'Scheduled'
+             ORDER BY i.start_at ASC"
+        );
+    }
+
+    /**
+     * Return the most recently resolved incidents.
+     *
+     * @param int $limit Maximum number of rows to return (default 5).
+     * @return array|object|null
+     */
+    public static function get_resolved_incidents( $limit = 5 ) {
+        global $wpdb;
+        $t      = $wpdb->prefix . NIM_TABLE;
+        $ta     = $wpdb->prefix . NIM_APPS_TABLE;
+        $limit  = absint( $limit );
+
+        return $wpdb->get_results(
+            "SELECT i.id, i.reference, i.description, i.severity, i.updated_at,
+                    COALESCE(i.resolved_at, i.updated_at) AS resolved_at,
+                    a.name AS app_name
+             FROM $t i
+             LEFT JOIN $ta a ON i.app_id = a.id
+             WHERE i.status = 'Resolved'
+             ORDER BY COALESCE(i.resolved_at, i.updated_at) DESC
+             LIMIT $limit"
+        );
+    }
+
+    // -------------------------------------------------------------------------
+
+    /**
+     * Return all incidents for the admin list, with application name.
+     *
+     * @return array|object|null
+     */
+    public static function get_all_incidents_admin() {
+        global $wpdb;
+        $t  = $wpdb->prefix . NIM_TABLE;
+        $ta = $wpdb->prefix . NIM_APPS_TABLE;
+
+        return $wpdb->get_results(
+            "SELECT i.*, a.name AS app_name
+             FROM $t i
+             LEFT JOIN $ta a ON i.app_id = a.id
+             ORDER BY i.start_at DESC"
+        );
+    }
+
+    /**
+     * Return all applications for the admin list, with parent name.
+     *
+     * @return array|object|null
+     */
+    public static function get_all_apps_admin() {
+        global $wpdb;
+        $ta = $wpdb->prefix . NIM_APPS_TABLE;
+
+        return $wpdb->get_results(
+            "SELECT a.*, p.name AS parent_name
+             FROM $ta a
+             LEFT JOIN $ta p ON a.parent_id = p.id
+             ORDER BY p.name ASC, a.name ASC"
+        );
+    }
+
+    /**
+     * Update a single incident's status, setting resolved_at when transitioning to Resolved.
+     *
+     * @param int    $id         Incident ID.
+     * @param string $new_status New status value.
+     * @param string $old_status Previous status value (used to detect Resolved transition).
+     * @return int|false Rows affected, or false on DB error.
+     */
+    public static function update_status( int $id, string $new_status, string $old_status ) {
+        global $wpdb;
+        $table = self::table();
+        $now   = current_time( 'mysql', true );
+
+        $fields = [
+            'status'     => $new_status,
+            'updated_at' => $now,
+        ];
+
+        if ( 'Resolved' === $new_status && 'Resolved' !== $old_status ) {
+            $fields['resolved_at'] = $now;
+        } elseif ( 'Resolved' !== $new_status ) {
+            // Re-opening a resolved incident clears the resolved date.
+            $fields['resolved_at'] = null;
+        }
+
+        return $wpdb->update( $table, $fields, [ 'id' => $id ] );
+    }
+
+    /**
+     * Convenience: fully-qualified incidents table name.
+     */
+    public static function table(): string {
+        global $wpdb;
+        return $wpdb->prefix . NIM_TABLE;
+    }
+
+    /**
+     * Convenience: fully-qualified apps table name.
+     */
+    public static function apps_table(): string {
+        global $wpdb;
+        return $wpdb->prefix . NIM_APPS_TABLE;
     }
 
     /**

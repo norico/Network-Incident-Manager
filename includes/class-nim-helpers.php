@@ -15,6 +15,38 @@ class NIM_Helpers {
     /** Valid status values (single source of truth). */
     const STATUSES = [ 'Scheduled', 'In Progress', 'Resolved' ];
 
+    /**
+     * Return the translated label for a severity value.
+     * Uses literal strings so wp i18n make-pot can extract them.
+     *
+     * @param string $severity Raw DB value.
+     * @return string Translated label, or the raw value if unknown.
+     */
+    public static function severity_label( string $severity ): string {
+        $map = [
+            'Minor'    => __( 'Minor',    NIM_TD ),
+            'Major'    => __( 'Major',    NIM_TD ),
+            'Critical' => __( 'Critical', NIM_TD ),
+        ];
+        return $map[ $severity ] ?? $severity;
+    }
+
+    /**
+     * Return the translated label for a status value.
+     * Uses literal strings so wp i18n make-pot can extract them.
+     *
+     * @param string $status Raw DB value.
+     * @return string Translated label, or the raw value if unknown.
+     */
+    public static function status_label( string $status ): string {
+        $map = [
+            'Scheduled'   => __( 'Scheduled',   NIM_TD ),
+            'In Progress' => __( 'In Progress',  NIM_TD ),
+            'Resolved'    => __( 'Resolved',     NIM_TD ),
+        ];
+        return $map[ $status ] ?? $status;
+    }
+
     // -----------------------------------------------------------------------
     // Date helpers
     // -----------------------------------------------------------------------
@@ -148,6 +180,9 @@ class NIM_Helpers {
      * @param array $all_apps     Pre-loaded rows. Auto-loaded on first call.
      * @return string HTML <option> markup.
      */
+    /** Maximum nesting depth for the applications dropdown. */
+    const MAX_APP_DEPTH = 10;
+
     public static function apps_options_html(
         $selected_id = 0,
         $parent_id   = 0,
@@ -155,6 +190,9 @@ class NIM_Helpers {
         array $exclude_ids = [],
         array $all_apps    = []
     ) {
+        if ( $depth > self::MAX_APP_DEPTH ) {
+            return '';
+        }
         if ( empty( $all_apps ) ) {
             global $wpdb;
             $all_apps = $wpdb->get_results(

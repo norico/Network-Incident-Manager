@@ -30,7 +30,11 @@ class NIM_Plugin {
     // Class loader
     // -----------------------------------------------------------------------
 
-    private function load_classes(): void {
+    /**
+     * Load all plugin classes. Static so it can be called from activate()
+     * before the singleton is constructed.
+     */
+    public static function load_classes(): void {
         $dir = plugin_dir_path( __FILE__ );
         require_once $dir . 'class-nim-helpers.php';
         require_once $dir . 'class-nim-db.php';
@@ -68,11 +72,7 @@ class NIM_Plugin {
     // -----------------------------------------------------------------------
 
     public static function activate(): void {
-        // Load classes before activation hooks run (no autoloader yet).
-        $dir = plugin_dir_path( __FILE__ );
-        foreach ( [ 'class-nim-helpers', 'class-nim-db', 'class-nim-cron', 'class-nim-frontend' ] as $f ) {
-            require_once $dir . $f . '.php';
-        }
+        self::load_classes();
         NIM_DB::install();
         NIM_Frontend::register_rewrite_rules();
         flush_rewrite_rules();
