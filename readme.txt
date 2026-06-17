@@ -1,5 +1,5 @@
 === Network Incident Manager ===
-Contributors:       votrenom
+Contributors:       norico
 Tags:               incidents, monitoring, status page, network, multisite
 Requires at least:  6.2
 Tested up to:       6.8

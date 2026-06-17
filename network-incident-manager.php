@@ -3,7 +3,7 @@
  * Plugin Name: Network Incident Manager
  * Description: Network incident manager with dedicated table and REST API for multisite.
  * Version: 2.3.0
- * Author: Votre Nom
+ * Author: Norico
  * Text Domain: network-incident-manager
  * Domain Path: /languages
  */
