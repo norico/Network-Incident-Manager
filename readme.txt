@@ -1,10 +1,10 @@
 === Network Incident Manager ===
 Contributors:       norico
 Tags:               incidents, monitoring, status page, network, multisite
-Requires at least:  6.2
+Requires at least:  6.3
 Tested up to:       6.8
-Requires PHP:       8.0
-Stable tag:         2.2.0
+Requires PHP:       8.1
+Stable tag:         2.4.0
 License:            GPLv2 or later
 License URI:        https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -42,9 +42,9 @@ The check runs:
 
 = REST API =
 
-* `GET  /wp-json/network-incidents/v1/list` — public list of all incidents with application name
-* `POST /wp-json/network-incidents/v1/incidents` — create (requires `edit_posts`)
-* `PUT  /wp-json/network-incidents/v1/incidents/{id}` — update (requires `edit_posts`)
+* `GET        /wp-json/network-incidents/v1/list` — public; supports `?status=`, `?severity=`, `?app_id=`, `?per_page=`, `?page=`; returns `X-WP-Total` / `X-WP-TotalPages` headers
+* `POST       /wp-json/network-incidents/v1/incidents` — create (requires `edit_posts`)
+* `PUT|PATCH  /wp-json/network-incidents/v1/incidents/{id}` — partial or full update (requires `edit_posts`); returns 404 if the incident does not exist
 
 = Templates =
 
@@ -96,6 +96,9 @@ Yes. `ON UPDATE CURRENT_TIMESTAMP` is avoided; timestamps are managed manually. 
 See changelog.txt for the full version history.
 
 == Upgrade Notice ==
+
+= 2.4.0 =
+Major internal refactoring to OOP. No database schema changes — upgrade is safe and automatic. Requires PHP 8.1+. If you have a theme that calls `nim_get_template_part()` directly, the function is still available via a backward-compat shim.
 
 = 2.2.0 =
 New `start_at` column added to `wp_incidents`. The upgrade runs automatically on plugin load. "Open" renamed to "Scheduled"; "Maintenance" status removed — update any existing data manually if needed.

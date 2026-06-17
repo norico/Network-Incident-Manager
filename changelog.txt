@@ -1,3 +1,27 @@
+= 2.4.0 =
+* Architecture: full refactoring to OOP — logic split across 8 classes in `includes/`
+* Added: `NIM_Plugin` — singleton orchestrator; loads classes and wires all hooks
+* Added: `NIM_Helpers` — shared constants `SEVERITIES` / `STATUSES` (single source of truth), `parse_start_at()`, `apps_options_html()`, `get_descendant_ids()`, `get_column_names()`
+* Added: `NIM_DB` — database install, `maybe_upgrade()`, `drop_legacy_columns()`
+* Added: `NIM_Cron` — cron schedule/unschedule and `auto_transition()` callback
+* Added: `NIM_Frontend` — rewrite rules, template loader, asset enqueue, `get_template_part()`
+* Added: `NIM_Ajax` — `wp_ajax_nim_update_status` handler
+* Added: `NIM_REST_API` — REST route registration and callbacks; `sanitize_incident_fields()` shared helper
+* Added: `NIM_Admin` — admin menu, all four admin pages, form handlers, asset enqueue
+* Fixed: `PRAGMA table_info()` now routed directly to PDO on SQLite instead of going through `$wpdb` (which rejects non-MySQL syntax via the sqlite-database-integration mu-plugin)
+* Fixed: `nim_maybe_upgrade()` now flushes rewrite rules after upgrade so `/incidents/` stays reachable without manual reactivation
+* Fixed: `nim_api_update()` — existence check now runs before `UPDATE`, not after; returns 404 before touching the database
+* Fixed: `nim_handle_save()` — forged `nim_incident_id` values that do not exist in the table now trigger a 404 error instead of a silent no-op
+* Fixed: `validate_callback: is_numeric` on REST route `id` arg replaced with `rest_validate_request_arg` — `is_numeric` crashes when WordPress passes it 3 arguments
+* Fixed: REST PUT/PATCH route now accepts both methods for broader client compatibility
+* Fixed: admin list page — "Date" column now shows `start_at` (incident start) instead of `created_at` (entry creation)
+* Fixed: `page_app_edit()` label now reads "Application Name" when editing an existing app (was always "New Application Name")
+* Fixed: `$allowed_severity` / `$allowed_status` duplication across 4 functions eliminated — replaced by `NIM_Helpers::SEVERITIES` and `NIM_Helpers::STATUSES`
+* Added: plugin header fields `Requires at least: 6.3` and `Requires PHP: 8.1`
+* Added: backward-compat shim `nim_get_template_part()` global function so existing theme overrides are not broken
+* i18n: `.po` / `.mo` updated — 16 strings added that were missing after v2.3.0 (frontend page, REST API args, AJAX errors)
+* Version bump: `NIM_VERSION` → `2.4.0`
+
 = 2.3.0 =
 * Removed: `application varchar(255)` column from `wp_incidents` — unused since 2.1.0 (replaced by `app_id` + `wp_incident_apps`)
 * Migration runs automatically on next page load via `nim_drop_legacy_columns()`

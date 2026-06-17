@@ -2,7 +2,7 @@
 # Copyright (C) 2024
 msgid ""
 msgstr ""
-"Project-Id-Version: Network Incident Manager 2.1.0\n"
+"Project-Id-Version: Network Incident Manager 2.4.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-01-01 00:00+0000\n"
 "PO-Revision-Date: 2026-06-17 18:10+0200\n"
@@ -113,9 +113,6 @@ msgstr "Incidents programmés"
 msgid "Scheduled for %s"
 msgstr "Programmé pour le %s"
 
-msgid "Start Date"
-msgstr "Date de début"
-
 msgid "Incident becomes \"In Progress\" automatically when this date is reached."
 msgstr "L'incident passe automatiquement en « En cours » lorsque cette date est atteinte."
 
@@ -164,3 +161,64 @@ msgstr "Échec de la vérification de sécurité."
 # --- Plugin description ---
 msgid "Network incident manager with dedicated table and REST API for multisite."
 msgstr "Gestionnaire d'incidents réseau avec table dédiée et API REST pour multisite."
+
+# --- Frontend page ---
+msgid "No active incidents at this time."
+msgstr "Aucun incident actif pour le moment."
+
+msgid "%d active incident"
+msgstr "%d incident actif"
+
+msgid "%d active incidents"
+msgstr "%d incidents actifs"
+
+msgid "Reported on %s"
+msgstr "Signalé le %s"
+
+msgid "(No reference)"
+msgstr "(Sans référence)"
+
+# --- REST API args (visible dans /wp-json/) ---
+msgid "Filter by incident status."
+msgstr "Filtrer par statut d'incident."
+
+msgid "Filter by incident severity."
+msgstr "Filtrer par sévérité d'incident."
+
+msgid "Filter by application ID."
+msgstr "Filtrer par identifiant d'application."
+
+msgid "Results per page (1-100)."
+msgstr "Résultats par page (1-100)."
+
+msgid "Page number (1-based)."
+msgstr "Numéro de page (à partir de 1)."
+
+# --- Errors / AJAX ---
+msgid "Incident not found."
+msgstr "Incident introuvable."
+
+msgid "Invalid data."
+msgstr "Données invalides."
+
+msgid "Update failed."
+msgstr "Échec de la mise à jour."
+
+# --- Admin (refactoring v2.4.0) ---
+msgid "Application Name"
+msgstr "Nom de l'application"
+
+msgid "Start Date"
+msgstr "Date de début"
+
+msgid "Hierarchy error"
+msgstr "Erreur de hiérarchie"
+
+msgid "Invalid parent: an application cannot be its own ancestor."
+msgstr "Parent invalide : une application ne peut pas être son propre ancêtre."
+
+msgid "Error"
+msgstr "Erreur"
+
+msgid "Saved"
+msgstr "Enregistré"
