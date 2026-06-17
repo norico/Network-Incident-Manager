@@ -1,0 +1,166 @@
+# French (France) translation for Network Incident Manager
+# Copyright (C) 2024
+msgid ""
+msgstr ""
+"Project-Id-Version: Network Incident Manager 2.1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-01 00:00+0000\n"
+"PO-Revision-Date: 2026-06-17 18:10+0200\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Poedit 3.9\n"
+
+# --- Menu ---
+msgid "Incidents"
+msgstr "Incidents"
+
+msgid "All Incidents"
+msgstr "Tous les incidents"
+
+msgid "Declare an Incident"
+msgstr "Déclarer un incident"
+
+msgid "Edit Incident"
+msgstr "Modifier l'incident"
+
+msgid "Applications"
+msgstr "Applications"
+
+msgid "Edit Application"
+msgstr "Modifier l'application"
+
+msgid "Add New Application"
+msgstr "Ajouter une application"
+
+# --- Incident list ---
+msgid "Reference"
+msgstr "Référence"
+
+msgid "Application"
+msgstr "Application"
+
+msgid "Severity"
+msgstr "Sévérité"
+
+msgid "Status"
+msgstr "Statut"
+
+msgid "Date"
+msgstr "Date"
+
+msgid "Edit"
+msgstr "Modifier"
+
+msgid "Delete"
+msgstr "Supprimer"
+
+msgid "Delete this incident?"
+msgstr "Supprimer cet incident ?"
+
+msgid "Incident deleted."
+msgstr "Incident supprimé."
+
+msgid "No incidents found."
+msgstr "Aucun incident trouvé."
+
+# --- Incident form ---
+msgid "Incident reference"
+msgstr "Référence de l'incident"
+
+msgid "— None —"
+msgstr "— Aucune —"
+
+msgid "Manage applications"
+msgstr "Gérer les applications"
+
+msgid "Description"
+msgstr "Description"
+
+msgid "Incident saved."
+msgstr "Incident enregistré."
+
+msgid "Save Incident"
+msgstr "Enregistrer l'incident"
+
+# --- Severity values ---
+msgid "Minor"
+msgstr "Mineur"
+
+msgid "Major"
+msgstr "Majeur"
+
+msgid "Critical"
+msgstr "Critique"
+
+# --- Status values ---
+msgid "Scheduled"
+msgstr "Programmé"
+
+msgid "In Progress"
+msgstr "En cours"
+
+msgid "Resolved"
+msgstr "Résolu"
+
+msgid "Scheduled Incidents"
+msgstr "Incidents programmés"
+
+msgid "Scheduled for %s"
+msgstr "Programmé pour le %s"
+
+msgid "Start Date"
+msgstr "Date de début"
+
+msgid "Incident becomes \"In Progress\" automatically when this date is reached."
+msgstr "L'incident passe automatiquement en « En cours » lorsque cette date est atteinte."
+
+msgid "Recently Resolved"
+msgstr "Récemment résolus"
+
+msgid "Resolved on %s"
+msgstr "Résolu le %s"
+
+# --- Applications list ---
+msgid "Name"
+msgstr "Nom"
+
+msgid "Parent Application"
+msgstr "Application parente"
+
+msgid "No applications found."
+msgstr "Aucune application trouvée."
+
+msgid "Application saved."
+msgstr "Application enregistrée."
+
+msgid "Application deleted."
+msgstr "Application supprimée."
+
+msgid "Delete this application?"
+msgstr "Supprimer cette application ?"
+
+# --- Application form ---
+msgid "New Application Name"
+msgstr "Nom de la nouvelle application"
+
+msgid "— None (top level) —"
+msgstr "— Aucune (niveau supérieur) —"
+
+msgid "Save Application"
+msgstr "Enregistrer l'application"
+
+# --- Security / errors ---
+msgid "Insufficient permissions."
+msgstr "Permissions insuffisantes."
+
+msgid "Security check failed."
+msgstr "Échec de la vérification de sécurité."
+
+# --- Plugin description ---
+msgid "Network incident manager with dedicated table and REST API for multisite."
+msgstr "Gestionnaire d'incidents réseau avec table dédiée et API REST pour multisite."

@@ -1,0 +1,215 @@
+/* Network Incident Manager — frontend default styles
+   These styles are only loaded when the theme does NOT provide page-incidents.php */
+
+.nim-incidents-page {
+    max-width: 860px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    font-family: inherit;
+}
+
+/* Header */
+.nim-incidents-header {
+    margin-bottom: 1.5rem;
+}
+.nim-incidents-title {
+    font-size: 1.75rem;
+    margin: 0 0 0.25rem;
+}
+.nim-incidents-count {
+    color: #666;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* No incidents */
+.nim-no-incidents {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    border-radius: 6px;
+    padding: 1.25rem 1.5rem;
+    color: #166534;
+}
+.nim-no-incidents-icon {
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+.nim-no-incidents p {
+    margin: 0;
+}
+
+/* Incident list */
+.nim-incidents-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Incident card */
+.nim-incident {
+    border: 1px solid #e2e8f0;
+    border-left-width: 5px;
+    border-radius: 6px;
+    padding: 1.25rem 1.5rem;
+    background: #fff;
+}
+.nim-incident--critical { border-left-color: #dc2626; }
+.nim-incident--major    { border-left-color: #f97316; }
+.nim-incident--minor    { border-left-color: #3b82f6; }
+
+.nim-incident__header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Badges */
+.nim-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.2em 0.6em;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* Severity badges */
+.nim-severity--critical { background: #fee2e2; color: #991b1b; }
+.nim-severity--major    { background: #ffedd5; color: #9a3412; }
+.nim-severity--minor    { background: #dbeafe; color: #1e40af; }
+
+/* Status badges */
+.nim-status--scheduled   { background: #fef9c3; color: #854d0e; }
+.nim-status--in-progress { background: #e0f2fe; color: #0c4a6e; }
+.nim-status--resolved    { background: #dcfce7; color: #166534; }
+
+/* Application label */
+.nim-incident__app {
+    font-size: 0.8rem;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 0.2em 0.6em;
+    border-radius: 4px;
+}
+
+/* Title */
+.nim-incident__title {
+    font-size: 1.1rem;
+    margin: 0 0 0.5rem;
+    font-weight: 600;
+}
+
+/* Description */
+.nim-incident__description {
+    font-size: 0.95rem;
+    color: #374151;
+    margin-bottom: 0.75rem;
+    line-height: 1.6;
+}
+.nim-incident__description p:last-child { margin-bottom: 0; }
+
+/* Date */
+.nim-incident__date {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    margin: 0;
+}
+
+/* Scheduled incidents section */
+.nim-scheduled-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+}
+.nim-scheduled-title {
+    font-size: 1.1rem;
+    color: #6b7280;
+    margin: 0 0 0.75rem;
+    font-weight: 600;
+}
+.nim-scheduled-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.nim-scheduled-item {
+    border: 1px dashed #d1d5db;
+    border-left: 4px solid #94a3b8;
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    background: #f8fafc;
+    opacity: 0.9;
+}
+.nim-scheduled-item__header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+}
+.nim-scheduled-item__title {
+    font-weight: 600;
+    margin: 0 0 0.25rem;
+    font-size: 1rem;
+}
+.nim-scheduled-item__date {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin: 0.4rem 0 0;
+}
+
+/* Recently resolved section */
+.nim-resolved-section {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
+}
+.nim-resolved-title {
+    font-size: 1.1rem;
+    color: #6b7280;
+    margin: 0 0 0.75rem;
+    font-weight: 600;
+}
+.nim-resolved-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+.nim-resolved-item {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: #f9fafb;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: #374151;
+    opacity: 0.85;
+}
+.nim-resolved-item__title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.nim-resolved-item__date {
+    font-size: 0.78rem;
+    color: #9ca3af;
+    white-space: nowrap;
+}
