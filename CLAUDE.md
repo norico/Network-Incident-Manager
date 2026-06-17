@@ -2,7 +2,7 @@
 
 ## Plugin overview
 
-Custom WordPress plugin (v2.4.0) that manages network incidents using **dedicated database tables** (not Custom Post Types). Fully object-oriented since v2.4.0.
+Custom WordPress plugin (v2.5.1) that manages network incidents using **dedicated database tables** (not Custom Post Types). Fully object-oriented since v2.4.0.
 
 ## File structure
 
@@ -28,7 +28,7 @@ network-incident-manager/
 │   ├── page-incidents.php              ← Main frontend template (/incidents/ URL)
 │   └── parts/
 │       ├── incident-active.php         ← Card for In Progress incidents
-│       ├── incident-scheduled.php      ← Row for Scheduled incidents
+│       ├── incident-scheduled.php      ← Card for Scheduled incidents (header: badge+app / title / description? / date)
 │       └── incident-resolved.php       ← Row for Resolved incidents
 ├── changelog.txt
 ├── readme.txt
@@ -40,10 +40,10 @@ network-incident-manager/
 | Class | Responsibility | Key methods |
 |---|---|---|
 | `NIM_Plugin` | Singleton orchestrator | `instance()`, `activate()`, `deactivate()`, `load_textdomain()` |
-| `NIM_Helpers` | Shared utilities | `parse_start_at()`, `get_column_names()`, `get_descendant_ids()`, `apps_options_html()` |
-| `NIM_DB` | Database lifecycle | `install()`, `maybe_upgrade()`, `drop_legacy_columns()` |
+| `NIM_Helpers` | Shared utilities | `parse_start_at()`, `get_column_names()`, `get_descendant_ids()`, `apps_options_html()`, `severity_label()`, `status_label()` |
+| `NIM_DB` | Database lifecycle | `install()`, `maybe_upgrade()`, `drop_legacy_columns()`, `update_status()`, `table()`, `apps_table()`, `get_all_incidents_admin()`, `get_all_apps_admin()`, `get_active_incidents()`, `get_scheduled_incidents()`, `get_resolved_incidents()` |
 | `NIM_Cron` | WP-Cron | `schedule()`, `unschedule()`, `auto_transition()` |
-| `NIM_Frontend` | Public-facing | `register_rewrite_rules()`, `template_include()`, `enqueue_assets()`, `get_template_part()` |
+| `NIM_Frontend` | Public-facing | `register_rewrite_rules()`, `template_include()`, `enqueue_assets()`, `get_template_part()`, `shortcode()` |
 | `NIM_Ajax` | Admin AJAX | `update_status()` |
 | `NIM_REST_API` | REST API | `register_routes()`, `list_incidents()`, `create_incident()`, `update_incident()` |
 | `NIM_Admin` | WP-Admin | `register_menu()`, `page_list/edit/apps_list/app_edit()`, `handle_*_save/delete()` |
@@ -56,7 +56,9 @@ network-incident-manager/
 | `wp_incident_apps` | Hierarchical application list |
 
 ### `wp_incidents` columns
-`id`, `reference`, `description`, `severity`, `status`, `app_id`, `author_id`, `start_at`, `created_at`, `updated_at`
+`id`, `reference`, `description`, `severity`, `status`, `app_id`, `author_id`, `start_at`, `resolved_at`, `created_at`, `updated_at`
+
+`resolved_at` is set automatically when status transitions to Resolved (via `NIM_DB::update_status()`), and cleared when re-opened. Use `COALESCE(resolved_at, updated_at)` in queries for backward compatibility with pre-2.5.0 rows.
 
 All datetimes stored in **UTC**. Use `current_time('mysql', true)` to write, `strtotime($val . ' UTC')` + `wp_date()` to display.
 
@@ -66,18 +68,27 @@ All datetimes stored in **UTC**. Use `current_time('mysql', true)` to write, `st
 ## Valid values — single source of truth
 
 ```php
-NIM_Helpers::SEVERITIES  // ['Minor', 'Major', 'Critical']
-NIM_Helpers::STATUSES    // ['Scheduled', 'In Progress', 'Resolved']
+NIM_Helpers::SEVERITIES   // ['Minor', 'Major', 'Critical']
+NIM_Helpers::STATUSES     // ['Scheduled', 'In Progress', 'Resolved']
+NIM_Helpers::MAX_APP_DEPTH // 10 — max recursion depth for apps dropdown
 ```
+
+For translated labels, use the dedicated helpers (these use literal strings extractable by `make-pot`):
+```php
+NIM_Helpers::severity_label( $severity ); // 'Minor' → __('Minor', NIM_TD)
+NIM_Helpers::status_label( $status );     // 'In Progress' → __('In Progress', NIM_TD)
+```
+Never use `__( $variable, NIM_TD )` — dynamic strings are invisible to i18n extraction tools.
 
 **When adding a new status or severity**, update ALL of the following:
 1. `NIM_Helpers::SEVERITIES` or `NIM_Helpers::STATUSES` constants
-2. `$status_opts` / `$severity_opts` arrays in `NIM_Admin::page_list()` and `NIM_Admin::page_edit()`
-3. `enum` arrays in `NIM_REST_API::register_routes()` args
-4. `WHERE` clauses in `templates/page-incidents.php`
-5. CSS class in `assets/css/frontend.css` (`.nim-status--{slug}` or `.nim-severity--{slug}`)
-6. Translation strings in `languages/network-incident-manager-fr_FR.po`
-7. Recompile `.mo`: `wp i18n make-mo languages/network-incident-manager-fr_FR.po`
+2. `NIM_Helpers::severity_label()` or `NIM_Helpers::status_label()` map
+3. `$status_opts` / `$severity_opts` arrays in `NIM_Admin::page_list()` and `NIM_Admin::page_edit()`
+4. `enum` arrays in `NIM_REST_API::register_routes()` args
+5. `WHERE` clauses in `templates/page-incidents.php`
+6. CSS class in `assets/css/frontend.css` (`.nim-status--{slug}` or `.nim-severity--{slug}`)
+7. Translation strings in `languages/network-incident-manager-fr_FR.po`
+8. Recompile `.mo`: `wp i18n make-mo languages/network-incident-manager-fr_FR.po`
 
 ## Version bumping
 
@@ -100,6 +111,8 @@ When changing the database schema:
 
 Variables are passed via `extract($data, EXTR_SKIP)`. Always use `$incident` as the variable name.
 
+**Never use a local `$td` variable for the text domain in template parts** — it is not injected by `extract()` and will generate `Undefined variable` warnings. Use the global constant `NIM_TD` directly.
+
 ### Adding a new template part
 1. Create `templates/parts/{slug}.php`
 2. Call with `NIM_Frontend::get_template_part('{slug}', ['incident' => $incident])`
@@ -117,9 +130,10 @@ Logic: `UPDATE wp_incidents SET status = 'In Progress' WHERE status = 'Scheduled
 
 | Method | Route | Auth | Notes |
 |---|---|---|---|
-| GET | `/wp-json/network-incidents/v1/list` | Public | Params: `status`, `severity`, `app_id`, `per_page` (max 100), `page`. Headers: `X-WP-Total`, `X-WP-TotalPages` |
+| GET | `/wp-json/network-incidents/v1/list` | Public | Params: `status`, `severity`, `app_id`, `per_page` (max 100), `page`, `orderby` (start_at\|created_at\|updated_at\|severity\|status), `order` (ASC\|DESC). Headers: `X-WP-Total`, `X-WP-TotalPages` |
 | POST | `/wp-json/network-incidents/v1/incidents` | `edit_posts` | |
 | PUT\|PATCH | `/wp-json/network-incidents/v1/incidents/{id}` | `edit_posts` | Returns 404 if not found |
+| DELETE | `/wp-json/network-incidents/v1/incidents/{id}` | `delete_posts` | Returns 204 on success, 404 if not found |
 
 All route args use `validate_callback: rest_validate_request_arg` (never bare PHP functions like `is_numeric` — WP passes 3 args to validate callbacks).
 
@@ -127,6 +141,26 @@ All route args use `validate_callback: rest_validate_request_arg` (never bare PH
 
 Action: `nim_update_status` (class `NIM_Ajax`).
 Nonce: `nim_update_status` — created in `NIM_Admin::enqueue_assets()`, verified in `NIM_Ajax::update_status()`.
+Fires `do_action('nim_status_changed', $id, $old_status, $new_status)` on every status change.
+
+## Hooks
+
+### `nim_status_changed`
+```php
+do_action( 'nim_status_changed', int $id, string $old_status, string $new_status );
+```
+Fired in three places:
+- `NIM_Cron::auto_transition()` — Scheduled → In Progress (bulk, one action per incident)
+- `NIM_Ajax::update_status()` — inline admin list dropdown change
+- `NIM_Admin::handle_incident_save()` — save form status field change
+
+## Shortcode
+
+`[nim_incidents]` — embeds the full status page (active / scheduled / resolved) inside any post or page.
+Optional attribute: `resolved_limit` (integer, default 5).
+
+Implemented in `NIM_Frontend::shortcode()`. Calls `NIM_Cron::auto_transition()` before rendering.
+Does **not** call `get_header()` / `get_footer()` — outputs only the `<div id="nim-incidents-page">` wrapper.
 
 ## i18n workflow
 
