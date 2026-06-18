@@ -1,3 +1,11 @@
+= 2.5.3 =
+* Added: bloc Gutenberg natif `nim/incidents` (`includes/class-nim-block.php`, `assets/js/block.js`) — aperçu dynamique via `ServerSideRender`, sélecteur de section (Toutes / Active / Scheduled / Resolved) et slider Limit (0–50) dans la sidebar
+* Added: `NIM_Block::register_block()` enregistre `frontend.css` comme `editor_style` + `style` du bloc — le rendu éditeur est visuellement identique au frontend
+* Added: shortcode `[nim_incidents]` — nouveaux attributs `section=` (active|scheduled|resolved, vide = tout) et `limit=` (entier, 0 = sans limite) ; `resolved_limit=` conservé pour la rétro-compatibilité
+* Added: `NIM_DB::get_active_incidents( $limit )` et `NIM_DB::get_scheduled_incidents( $limit )` acceptent désormais un paramètre `$limit` optionnel (0 = sans limite)
+* Fixed: shortcode `[nim_incidents]` cassait le design de la page hôte — suppression du bloc `ob_start()` / `include page-incidents.php` / `ob_end_clean()` qui déclenchait `get_header()` / `get_footer()` avec des effets de bord irréversibles
+* Version bump: `NIM_VERSION` → `2.5.3`
+
 = 2.5.2 =
 * Fixed: `NIM_Helpers::parse_start_at()` — `DateTime::getLastErrors()` retourne `false` en PHP 8.2+ quand il n'y a aucune erreur (au lieu d'un tableau vide) ; `array_sum(false)` provoquait une `Fatal Error` à chaque ajout d'incident
 * Fixed: notices admin positionnées entre le titre et le bouton d'action — marqueur `<hr class="wp-header-end">` ajouté sur toutes les pages admin (`page_list`, `page_edit`, `page_apps_list`)

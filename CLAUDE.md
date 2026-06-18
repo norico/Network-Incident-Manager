@@ -2,7 +2,7 @@
 
 ## Plugin overview
 
-Custom WordPress plugin (v2.5.2) that manages network incidents using **dedicated database tables** (not Custom Post Types). Fully object-oriented since v2.4.0.
+Custom WordPress plugin (v2.5.3) that manages network incidents using **dedicated database tables** (not Custom Post Types). Fully object-oriented since v2.4.0.
 
 ## File structure
 
@@ -157,10 +157,25 @@ Fired in three places:
 ## Shortcode
 
 `[nim_incidents]` — embeds the full status page (active / scheduled / resolved) inside any post or page.
-Optional attribute: `resolved_limit` (integer, default 5).
+
+| Attribute | Type | Default | Description |
+|---|---|---|---|
+| `section` | string | `''` | `'active'`, `'scheduled'`, or `'resolved'`. Omit to show all three sections. |
+| `limit` | int | `0` | Max items in the targeted section (0 = no limit). When `section=` is absent, applies to each section independently. |
+| `resolved_limit` | int | `5` | BC alias for `limit=` when `section="resolved"`. Ignored when `limit=` is set. |
+
+Examples:
+```
+[nim_incidents]
+[nim_incidents section="active"]
+[nim_incidents section="resolved" limit="10"]
+[nim_incidents limit="3"]
+```
 
 Implemented in `NIM_Frontend::shortcode()`. Calls `NIM_Cron::auto_transition()` before rendering.
 Does **not** call `get_header()` / `get_footer()` — outputs only the `<div id="nim-incidents-page">` wrapper.
+
+`NIM_DB::get_active_incidents( $limit )` and `NIM_DB::get_scheduled_incidents( $limit )` both accept an optional `int $limit` (0 = no limit). `NIM_DB::get_resolved_incidents( $limit )` already had this param (default 5).
 
 ## i18n workflow
 

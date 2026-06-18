@@ -43,6 +43,7 @@ class NIM_Plugin {
         require_once $dir . 'class-nim-ajax.php';
         require_once $dir . 'class-nim-rest-api.php';
         require_once $dir . 'class-nim-admin.php';
+        require_once $dir . 'class-nim-block.php';
     }
 
     // -----------------------------------------------------------------------
@@ -61,6 +62,7 @@ class NIM_Plugin {
         NIM_Frontend::register_hooks();
         NIM_Ajax::register_hooks();
         NIM_REST_API::register_hooks();
+        NIM_Block::register_hooks();
 
         if ( is_admin() ) {
             NIM_Admin::register_hooks();

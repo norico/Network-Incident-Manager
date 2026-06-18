@@ -82,14 +82,48 @@ class NIM_Frontend {
     /**
      * Shortcode [nim_incidents] — embeds the full status page inside any post/page.
      *
-     * Usage: [nim_incidents]
-     * Optional attrs: resolved_limit (int, default 5)
+     * Attributes:
+     *   section        (string) 'active' | 'scheduled' | 'resolved' — show only that section.
+     *                  Omit to show all three sections.
+     *   limit          (int)    Maximum number of items to display in the targeted section.
+     *                  When section= is absent, applies to each section independently.
+     *                  Defaults to 0 (no limit) except resolved which defaults to 5.
+     *   resolved_limit (int)    Backward-compat alias for limit= when section="resolved".
+     *                  Ignored when limit= is explicitly set.
+     *
+     * Examples:
+     *   [nim_incidents]
+     *   [nim_incidents section="active"]
+     *   [nim_incidents section="resolved" limit="10"]
+     *   [nim_incidents limit="3"]
      *
      * @param array $atts Shortcode attributes.
      * @return string HTML output.
      */
     public static function shortcode( $atts ): string {
-        $atts = shortcode_atts( [ 'resolved_limit' => 5 ], $atts, 'nim_incidents' );
+        $atts = shortcode_atts(
+            [
+                'section'       => '',  // '' = all sections
+                'limit'         => 0,   // 0 = no limit (resolved falls back to resolved_limit)
+                'resolved_limit' => 5,  // backward-compat
+            ],
+            $atts,
+            'nim_incidents'
+        );
+
+        $section = sanitize_key( $atts['section'] );
+        $limit   = absint( $atts['limit'] );
+
+        // Resolve per-section limits.
+        // limit= takes precedence; resolved_limit= is the BC fallback for resolved only.
+        $active_limit    = $limit > 0 ? $limit : 0;
+        $scheduled_limit = $limit > 0 ? $limit : 0;
+        $resolved_limit  = $limit > 0 ? $limit : absint( $atts['resolved_limit'] );
+
+        // Determine which sections to show.
+        $show_active    = ( '' === $section || 'active'    === $section );
+        $show_scheduled = ( '' === $section || 'scheduled' === $section );
+        $show_resolved  = ( '' === $section || 'resolved'  === $section );
 
         NIM_Cron::auto_transition();
 
@@ -103,20 +137,14 @@ class NIM_Frontend {
             );
         }
 
-        $incidents = NIM_DB::get_active_incidents();
-        $scheduled = NIM_DB::get_scheduled_incidents();
-        $resolved  = NIM_DB::get_resolved_incidents( absint( $atts['resolved_limit'] ) );
+        $incidents = $show_active    ? NIM_DB::get_active_incidents( $active_limit )       : [];
+        $scheduled = $show_scheduled ? NIM_DB::get_scheduled_incidents( $scheduled_limit ) : [];
+        $resolved  = $show_resolved  ? NIM_DB::get_resolved_incidents( $resolved_limit )   : [];
 
-        ob_start();
-        include plugin_dir_path( dirname( __FILE__ ) ) . 'templates/page-incidents.php';
-        // page-incidents.php calls get_header()/get_footer() — we DON'T want that in shortcode context.
-        // So we use the individual parts directly instead.
-        ob_end_clean();
-
-        // Render inline using the same template parts.
         ob_start();
         ?>
         <div id="nim-incidents-page" class="nim-incidents-page">
+            <?php if ( $show_active ) : ?>
             <?php if ( empty( $incidents ) ) : ?>
             <div class="nim-no-incidents">
                 <span class="nim-no-incidents-icon" aria-hidden="true">&#10003;</span>
@@ -128,6 +156,7 @@ class NIM_Frontend {
                     self::get_template_part( 'incident-active', [ 'incident' => $incident ] );
                 endforeach; ?>
             </ul>
+            <?php endif; ?>
             <?php endif; ?>
 
             <?php if ( ! empty( $scheduled ) ) : ?>

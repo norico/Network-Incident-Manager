@@ -4,7 +4,7 @@ Tags:               incidents, monitoring, status page, network, multisite
 Requires at least:  6.3
 Tested up to:       6.8
 Requires PHP:       8.2
-Stable tag:         2.5.2
+Stable tag:         2.5.3
 License:            GPLv2 or later
 License URI:        https://www.gnu.org/licenses/gpl-2.0.html
 Studio Code:        WordPress Studio Code powered by Claude claude-sonnet-4-5 (Anthropic)
@@ -104,6 +104,9 @@ Yes. `ON UPDATE CURRENT_TIMESTAMP` is avoided; timestamps are managed manually. 
 See changelog.txt for the full version history.
 
 == Upgrade Notice ==
+
+= 2.5.3 =
+Adds a native Gutenberg block `nim/incidents` with live server-side preview, section selector, and item limit control. The block stylesheet is shared with the frontend so the editor preview matches the public render exactly. Also extends the `[nim_incidents]` shortcode with `section=` and `limit=` attributes, and fixes the shortcode breaking the host page design when `page-incidents.php` was included inside `ob_start()`.
 
 = 2.5.2 =
 Patch release: fixes Fatal Error on PHP 8.2+ — `DateTime::getLastErrors()` now returns `false` instead of an empty array when there are no errors; `parse_start_at()` now guards against this before calling `array_sum()`. Bumps minimum PHP requirement to 8.2. Also fixes admin notices positioning (`wp-header-end` marker added on all admin pages) and adds `auto_transition()` call on `admin_init` so scheduled incidents transition correctly from the admin.

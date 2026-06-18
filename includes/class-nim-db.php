@@ -74,12 +74,14 @@ class NIM_DB {
     /**
      * Return active (In Progress) incidents, ordered by severity then start_at.
      *
+     * @param int $limit Maximum rows to return. 0 = no limit.
      * @return array|object|null
      */
-    public static function get_active_incidents() {
+    public static function get_active_incidents( int $limit = 0 ) {
         global $wpdb;
         $t  = $wpdb->prefix . NIM_TABLE;
         $ta = $wpdb->prefix . NIM_APPS_TABLE;
+        $limit_clause = $limit > 0 ? 'LIMIT ' . $limit : '';
 
         return $wpdb->get_results(
             "SELECT i.id, i.reference, i.description, i.severity, i.status,
@@ -90,19 +92,22 @@ class NIM_DB {
              WHERE i.status = 'In Progress'
              ORDER BY
                  CASE i.severity WHEN 'Critical' THEN 1 WHEN 'Major' THEN 2 ELSE 3 END,
-                 i.start_at ASC"
+                 i.start_at ASC
+             $limit_clause"
         );
     }
 
     /**
      * Return scheduled incidents, ordered by start_at ascending.
      *
+     * @param int $limit Maximum rows to return. 0 = no limit.
      * @return array|object|null
      */
-    public static function get_scheduled_incidents() {
+    public static function get_scheduled_incidents( int $limit = 0 ) {
         global $wpdb;
         $t  = $wpdb->prefix . NIM_TABLE;
         $ta = $wpdb->prefix . NIM_APPS_TABLE;
+        $limit_clause = $limit > 0 ? 'LIMIT ' . $limit : '';
 
         return $wpdb->get_results(
             "SELECT i.id, i.reference, i.description, i.severity, i.status,
@@ -111,7 +116,8 @@ class NIM_DB {
              FROM $t i
              LEFT JOIN $ta a ON i.app_id = a.id
              WHERE i.status = 'Scheduled'
-             ORDER BY i.start_at ASC"
+             ORDER BY i.start_at ASC
+             $limit_clause"
         );
     }
 
