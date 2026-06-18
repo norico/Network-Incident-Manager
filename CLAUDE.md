@@ -2,7 +2,7 @@
 
 ## Plugin overview
 
-Custom WordPress plugin (v2.5.1) that manages network incidents using **dedicated database tables** (not Custom Post Types). Fully object-oriented since v2.4.0.
+Custom WordPress plugin (v2.5.2) that manages network incidents using **dedicated database tables** (not Custom Post Types). Fully object-oriented since v2.4.0.
 
 ## File structure
 
@@ -178,6 +178,7 @@ wp i18n make-pot . languages/network-incident-manager.pot --domain=network-incid
 
 ## SQLite constraints (WordPress Studio)
 
+- PHP 8.2+ required — `DateTime::getLastErrors()` returns `false` (not `[]`) when there are no errors; always guard with `$errors ?: [...]` before `array_sum()`
 - No `ON UPDATE CURRENT_TIMESTAMP` — update `updated_at` manually
 - No `FULLTEXT` indexes
 - `PRAGMA table_info()` must **not** go through `$wpdb` on Studio — the `sqlite-database-integration` mu-plugin only parses MySQL syntax. `NIM_Helpers::get_column_names()` routes PRAGMA directly to PDO

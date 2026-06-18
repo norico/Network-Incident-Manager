@@ -3,8 +3,8 @@ Contributeurs :     norico
 Étiquettes :        incidents, supervision, page de statut, réseau, multisite
 Nécessite au moins: 6.3
 Testé jusqu'à :     6.8
-Nécessite PHP :     8.1
-Version stable :    2.5.1
+Nécessite PHP :     8.2
+Version stable :    2.5.2
 Licence :           GPLv2 ou ultérieure
 URI de licence :    https://www.gnu.org/licenses/gpl-2.0.html
 Studio Code :       WordPress Studio Code propulsé par Claude claude-sonnet-4-5 (Anthropic)
@@ -104,6 +104,9 @@ Oui. `ON UPDATE CURRENT_TIMESTAMP` est évité ; les horodatages sont gérés ma
 Consultez changelog.txt pour l'historique complet des versions.
 
 == Avis de mise à jour ==
+
+= 2.5.2 =
+Version corrective : corrige une erreur fatale sur PHP 8.2+ — `DateTime::getLastErrors()` retourne désormais `false` au lieu d'un tableau vide quand il n'y a pas d'erreur ; `parse_start_at()` protège maintenant contre ce cas avant d'appeler `array_sum()`. La version PHP minimale requise passe à 8.2. Corrige également le positionnement des notices admin (marqueur `wp-header-end` ajouté sur toutes les pages admin) et ajoute l'appel à `auto_transition()` sur `admin_init` pour que les incidents programmés transitionnent correctement depuis l'admin.
 
 = 2.5.1 =
 Version corrective : corrige la structure CSS du template des incidents programmés (la date s'affichait collée après le titre), restaure l'affichage de la description manquante, et supprime les avertissements PHP `Undefined variable $td` dans les templates.

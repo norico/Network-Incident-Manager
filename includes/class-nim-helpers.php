@@ -79,7 +79,8 @@ class NIM_Helpers {
         $tz = wp_timezone();
         foreach ( $formats as $fmt ) {
             $dt = DateTime::createFromFormat( $fmt, $input, $tz );
-            if ( false !== $dt && ! array_sum( DateTime::getLastErrors() ) ) {
+            $errors = DateTime::getLastErrors();
+            if ( false !== $dt && ! array_sum( $errors ?: [ 'warning_count' => 0, 'error_count' => 0 ] ) ) {
                 $dt->setTimezone( new DateTimeZone( 'UTC' ) );
                 return $dt->format( 'Y-m-d H:i:s' );
             }

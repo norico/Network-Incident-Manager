@@ -2,12 +2,12 @@
 /**
  * Plugin Name:       Network Incident Manager
  * Description:       Network incident manager with dedicated tables and REST API for multisite.
- * Version:           2.5.1
+ * Version:           2.5.2
  * Author:            Norico
  * Text Domain:       network-incident-manager
  * Domain Path:       /languages
  * Requires at least: 6.3
- * Requires PHP:      8.1
+ * Requires PHP:      8.2
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-define( 'NIM_VERSION',     '2.5.1' );
+define( 'NIM_VERSION',     '2.5.2' );
 define( 'NIM_TABLE',       'incidents' );
 define( 'NIM_APPS_TABLE',  'incident_apps' );
 define( 'NIM_PLUGIN_FILE', __FILE__ );

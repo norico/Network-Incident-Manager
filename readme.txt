@@ -3,8 +3,8 @@ Contributors:       norico
 Tags:               incidents, monitoring, status page, network, multisite
 Requires at least:  6.3
 Tested up to:       6.8
-Requires PHP:       8.1
-Stable tag:         2.5.1
+Requires PHP:       8.2
+Stable tag:         2.5.2
 License:            GPLv2 or later
 License URI:        https://www.gnu.org/licenses/gpl-2.0.html
 Studio Code:        WordPress Studio Code powered by Claude claude-sonnet-4-5 (Anthropic)
@@ -104,6 +104,9 @@ Yes. `ON UPDATE CURRENT_TIMESTAMP` is avoided; timestamps are managed manually. 
 See changelog.txt for the full version history.
 
 == Upgrade Notice ==
+
+= 2.5.2 =
+Patch release: fixes Fatal Error on PHP 8.2+ — `DateTime::getLastErrors()` now returns `false` instead of an empty array when there are no errors; `parse_start_at()` now guards against this before calling `array_sum()`. Bumps minimum PHP requirement to 8.2. Also fixes admin notices positioning (`wp-header-end` marker added on all admin pages) and adds `auto_transition()` call on `admin_init` so scheduled incidents transition correctly from the admin.
 
 = 2.5.1 =
 Patch release: fixes CSS structure of the scheduled incident template (date was displayed inline after the title), restores missing description display, and removes undefined `$td` variable warnings in template parts.

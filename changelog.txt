@@ -1,5 +1,12 @@
+= 2.5.2 =
+* Fixed: `NIM_Helpers::parse_start_at()` — `DateTime::getLastErrors()` retourne `false` en PHP 8.2+ quand il n'y a aucune erreur (au lieu d'un tableau vide) ; `array_sum(false)` provoquait une `Fatal Error` à chaque ajout d'incident
+* Fixed: notices admin positionnées entre le titre et le bouton d'action — marqueur `<hr class="wp-header-end">` ajouté sur toutes les pages admin (`page_list`, `page_edit`, `page_apps_list`)
+* Fixed: `auto_transition()` non déclenchée en admin — ajout de `add_action('admin_init', ['NIM_Cron', 'auto_transition'])` dans `NIM_Admin::register_hooks()`
+* Changed: version PHP minimale requise relevée de 8.1 à 8.2
+* Version bump: `NIM_VERSION` → `2.5.2`
+
 = 2.5.1 =
-    * Fixed: `incident-scheduled.php` — structure HTML corrigée : le template utilisait les classes CSS de `.nim-resolved-item` (`__title`, `__date` comme `<span>` inline) au lieu des classes dédiées `.nim-scheduled-item` (`__header`, `__title`, `__date` en blocs) — la date s'affichait colée après le titre
+* Fixed: `incident-scheduled.php` — structure HTML corrigée : le template utilisait les classes CSS de `.nim-resolved-item` (`__title`, `__date` comme `<span>` inline) au lieu des classes dédiées `.nim-scheduled-item` (`__header`, `__title`, `__date` en blocs) — la date s'affichait collée après le titre
 * Fixed: `incident-scheduled.php` — la description de l'incident ne s'affichait plus ; bloc `nim-incident__description` rajouté entre le titre et la date (conditionnel, réutilise le style existant de `incident-active.php`)
 * Fixed: variables `$td` résiduelles dans les trois templates parts (`incident-active.php`, `incident-scheduled.php`, `incident-resolved.php`) généraient un `Warning: Undefined variable $td` ; remplacées par la constante globale `NIM_TD`
 * Version bump: `NIM_VERSION` → `2.5.1`

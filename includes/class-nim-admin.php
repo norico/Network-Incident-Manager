@@ -14,6 +14,7 @@ class NIM_Admin {
 
     public static function register_hooks() {
         add_action( 'admin_menu',            [ __CLASS__, 'register_menu' ] );
+        add_action( 'admin_init',            [ 'NIM_Cron', 'auto_transition' ] );
         add_action( 'admin_init',            [ __CLASS__, 'handle_incident_save' ] );
         add_action( 'admin_init',            [ __CLASS__, 'handle_incident_delete' ] );
         add_action( 'admin_init',            [ __CLASS__, 'handle_app_save' ] );
@@ -176,6 +177,7 @@ class NIM_Admin {
         <div class="wrap">
             <h1 class="wp-heading-inline"><?php esc_html_e( 'Incidents', $td ); ?></h1>
             <a href="<?php echo esc_url( admin_url( 'admin.php?page=nim-add-incident' ) ); ?>" class="page-title-action"><?php esc_html_e( 'Declare an Incident', $td ); ?></a>
+            <hr class="wp-header-end">
             <?php if ( isset( $_GET['deleted'] ) ) : ?>
             <div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Incident deleted.', $td ); ?></p></div>
             <?php endif; ?>
@@ -232,6 +234,7 @@ class NIM_Admin {
         ?>
         <div class="wrap">
             <h1><?php echo $incident ? esc_html__( 'Edit Incident', $td ) : esc_html__( 'Declare an Incident', $td ); ?></h1>
+            <hr class="wp-header-end">
             <?php if ( isset( $_GET['updated'] ) ) : ?>
             <div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Incident saved.', $td ); ?></p></div>
             <?php endif; ?>
@@ -288,6 +291,7 @@ class NIM_Admin {
         <div class="wrap">
             <h1 class="wp-heading-inline"><?php esc_html_e( 'Applications', $td ); ?></h1>
             <a href="<?php echo esc_url( admin_url( 'admin.php?page=nim-edit-app' ) ); ?>" class="page-title-action"><?php esc_html_e( 'Add New Application', $td ); ?></a>
+            <hr class="wp-header-end">
             <?php if ( isset( $_GET['updated'] ) ) : ?><div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Application saved.', $td ); ?></p></div><?php endif; ?>
             <?php if ( isset( $_GET['deleted'] ) ) : ?><div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Application deleted.', $td ); ?></p></div><?php endif; ?>
             <table class="wp-list-table widefat fixed striped" style="margin-top:1em;">
